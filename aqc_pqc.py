@@ -6,11 +6,12 @@ import collections
 from hamiltonian import Hamiltonian
 from quantum_circuit import QCir
 from qiskit.quantum_info import Statevector
+from scheduling import Scheduling
 from sympy import Matrix
 
 
 class AQC_PQC():
-    def __init__(self, number_of_qubits, problem, steps, layers, single_qubit_gates, entanglement_gates, entanglement, use_third_derivatives = False, use_null_space = False, use_null_derivatives = False):
+    def __init__(self, number_of_qubits, problem, steps, layers, single_qubit_gates, entanglement_gates, entanglement, scheduling, use_third_derivatives=False, use_null_space=False, use_null_derivatives=False):
 
         self.number_of_qubits = number_of_qubits
         self.problem = problem
@@ -19,6 +20,7 @@ class AQC_PQC():
         self.single_qubit_gates = single_qubit_gates
         self.entanglement_gates = entanglement_gates
         self.entanglement = entanglement
+        self.scheduling = scheduling
         self.use_null_space = use_null_space
         self.use_null_derivatives = use_null_derivatives
 
@@ -32,6 +34,10 @@ class AQC_PQC():
         self.offset = hamiltonians.get_offset()
         self.initial_hamiltonian = hamiltonians.construct_initial_hamiltonian()
         self.target_hamiltonian = hamiltonians.construct_problem_hamiltonian()
+
+        schedules = Scheduling(self.number_of_qubits, self.steps, self.scheduling)
+
+        self.lambdas = schedules.get_lambdas()
 
 
     def get_expectation_value(self, angles, observable):
@@ -249,7 +255,6 @@ class AQC_PQC():
         
         energies_aqcpqc = []
 
-        lambdas = [i for i in np.linspace(0, 1, self.steps+1)][1:]
         optimal_thetas = self.initial_parameters.copy()
         print(f'We start with the optimal angles of the initial hamiltonian: {optimal_thetas}')
 
@@ -257,7 +262,7 @@ class AQC_PQC():
         w, v = np.linalg.eig(initial_hessian)
         print(f'The eigenvalues of the initial Hessian are {np.round(w, 7)}')
 
-        for lamda in lambdas:
+        for lamda in self.lambdas:
             print('\n')
             print(f'We are working on {lamda} where the current optimal point is {optimal_thetas}')
             hamiltonian = self.get_instantaneous_hamiltonian(lamda)
@@ -362,4 +367,3 @@ class AQC_PQC():
             print(f'The derivative of the minimum eigenvalue over lambda is {self.derivative_of_minimum_eigenvalue_over_lamda(hessian, lamda, optimal_thetas)}')
 
         return energies_aqcpqc
-

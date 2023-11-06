@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Hamiltonian():
+class Hamiltonian:
 
     def __init__(self, number_of_qubits, problem):
         
@@ -68,6 +68,11 @@ class Hamiltonian():
                 Hamiltonian -= h*self.tensor_pauli(qubit, self.paulix)
 
 
+        elif self.problem_type == 'Search':
+            marked_state = self.problem_properties
+            Hamiltonian = np.identity(2 ** self.number_of_qubits)
+            Hamiltonian[marked_state] = 0  # Subtract projector onto marked state.
+
         return Hamiltonian
     
     def get_offset(self):
@@ -89,4 +94,3 @@ class Hamiltonian():
                 offset += num**2
 
         return offset
-
